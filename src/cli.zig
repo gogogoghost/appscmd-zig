@@ -9,6 +9,7 @@ pub fn print_help() void {
         \\ appscmd-cli usage:
         \\     install     <path>         Install the application specific by the path.
         \\     install-pwa <url>          Install the PWA specific by the url.
+        \\     uninstall   <url>          Uninstall the application specific by the url.
         \\     list                       Print all applications on this device.
     ;
     std.debug.print("{s}\n", .{content});
@@ -69,6 +70,15 @@ pub fn list() !void {
     }
 }
 
+fn uninstall(url: []const u8) !void {
+    const response = try lib.send(.{ .cmd = "uninstall", .param = url }, allocator);
+    if (response.success) |success| {
+        std.debug.print("{s}\n", .{success.string});
+    } else if (response.@"error") |err| {
+        std.debug.print("{s}\n", .{err});
+    }
+}
+
 pub fn main() !void {
     var args = std.process.args();
     _ = args.next();
@@ -87,6 +97,12 @@ pub fn main() !void {
             }
         } else if (std.mem.eql(u8, cmd, "list")) {
             try list();
+        } else if (std.mem.eql(u8, cmd, "uninstall")) {
+            if (args.next()) |url| {
+                try uninstall(url);
+            } else {
+                return print_help();
+            }
         } else {
             print_help();
         }
